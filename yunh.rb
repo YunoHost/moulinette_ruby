@@ -11,6 +11,7 @@
 require 'rubygems'
 require 'digest/md5'
 require 'base64'
+require 'pp' # Just pretty printer :)
 
 ### Gem dependencies ###
 require 'net/ldap'		# LDAP OM
@@ -38,17 +39,22 @@ def ldap_search(base, filter, attrs = "dn", display = false)
 		puts "\033[31mError:\033[00m Wrong search arguments \nfilter: #{filter} \nattributes: #{attrs}"
 		exit 1
 	end
+	result = []
+	i = 0
 	search.each do |entry|
+		result[i] = {}
 		attrs.each do |attr|
 			begin
-				puts entry.send(attr.to_s) if display
-				return entry.send(attr.to_s)
+				row = entry.send(attr.to_s)
+				puts row if display 
+				result[i][attr] = row[1] ? row : row.to_s
 			rescue
-				puts "Notice: Undefined attribute '#{attr}' for #{entry.dn}"				
+				puts "\033[34mNotice:\033[00m Undefined attribute '#{attr}' for #{entry.dn}"				
 			end
 		end
+		i += 1
 	end
-	return false
+	return result.empty? ? false : result
 end
 
 def ldap_add(dn, attrs_hash)
@@ -126,12 +132,41 @@ def user_add(attrs_hash)
 	end
 end
 
+def user_populate(uid)
+	user_attrs = ["dn", "cn", "uid", "userPassword", "objectClass", "mail", "givenName", "sn", "displayName", "mailalias"]
+	if user = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, user_attrs)
+		return user
+	else
+		puts "\033[31mError:\033[00m User '#{uid}' doesn't exists"
+		exit 1
+	end
+end
+
+def user_info(uid)
+	info_attrs = ["givenName", "sn", "mail", "mailalias", "uid"]
+	if user = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, info_attrs)
+		user = user[0]
+		user["mail"] = user["mail"].join(", ") if user["mail"].kind_of?(Array)
+		user["mailalias"] = user["mailalias"].join(", ") if user["mailalias"].kind_of?(Array)
+
+		puts "\033[35m  Username: \033[00m" << user["uid"]
+		puts "\033[35m  Firstname: \033[00m" << user["givenName"]
+		puts "\033[35m  Lastname: \033[00m" << user["sn"]
+		puts "\033[35m  Mail: \033[00m" << user["mail"]
+		puts "\033[35m  Mail aliases: \033[00m" << user["mailalias"]
+		return user
+	else
+		puts "\033[31mError:\033[00m User '#{uid}' doesn't exists"
+		exit 1
+	end
+end
+
 def user_delete(uids)
 	uids.each do |uid|
 		if dn = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, "dn")
 			puts "\033[32mUser '#{uid}' successfully deleted !\033[00m" if ldap_delete(dn)
 		else
-			puts "\033[31mError:\033[00m The user '#{uid}' doesn't exists"
+			puts "\033[31mError:\033[00m User '#{uid}' doesn't exists"
 			exit 1
 		end
 	end
@@ -174,6 +209,13 @@ when "user"
 			end
 		else
 			puts "\033[35mUsage:\033[00m yunh user add <fields>\n\033[33mExample:\033[00m yunh user add \"firstname=Homer,lastname=Simpson,username=homer,mail=homer@simpson.org,password=donuts\""
+			exit 1
+		end
+	when "info"
+		if ARGV[2]
+			user_info(ARGV[2])
+		else
+			puts "\033[35mUsage:\033[00m yunh user info <uid>\n\033[33mExample:\033[00m yunh user info homer"
 			exit 1
 		end
 	when "delete"
