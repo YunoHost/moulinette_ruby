@@ -54,7 +54,7 @@ def ldap_search(base, filter, attrs = "dn", display = false)
 	begin
 		search = @ldap.search(:base => base, :attributes => attrs, :filter => filter, :return_result => true)
 	rescue
-		puts ERROR + "Wrong search arguments \nfilter: #{filter} \nattributes: #{attrs}"
+		puts ERROR + "Wrong search arguments \n   filter: #{filter} \n   attributes: #{attrs}"
 		exit 1
 	end
 	result = []
@@ -80,7 +80,7 @@ def ldap_add(dn, attrs_hash)
 		@ldap.add(:dn => dn, :attributes => attrs_hash)
 		return true
 	rescue
-		puts ERROR + "An error occured during LDAP entry creation\ndn: #{dn} \nattributes: \n#{attrs_hash}"
+		puts ERROR + "An error occured during LDAP entry creation\n   dn: #{dn} \n   attributes: \n#{attrs_hash}"
 		exit 1
 	end
 end
@@ -89,7 +89,7 @@ def ldap_delete(dn)
 	begin
 		return true if @ldap.delete(:dn => dn)
 	rescue
-		puts ERROR + "An error occured during LDAP entry deletion\ndn: #{dn}"
+		puts ERROR + "An error occured during LDAP entry deletion\n   dn: #{dn}"
 		exit 1
 	end
 end
