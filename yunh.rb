@@ -31,7 +31,7 @@ unless @ldap.bind
 end
 
 ### Generic LDAP functions ###
-def ldap_search(base, filter, attrs = "dn")
+def ldap_search(base, filter, attrs = "dn", display = false)
 	begin
 		search = @ldap.search(:base => base, :attributes => attrs, :filter => filter, :return_result => true)
 	rescue
@@ -41,20 +41,37 @@ def ldap_search(base, filter, attrs = "dn")
 	search.each do |entry|
 		attrs.each do |attr|
 			begin
-				puts entry.send(attr.to_s)
+				puts entry.send(attr.to_s) if display
+				return entry.send(attr.to_s)
 			rescue
-				puts "Notice: Undefined attribute '#{attr}' for #{entry.dn}"
+				puts "Notice: Undefined attribute '#{attr}' for #{entry.dn}"				
 			end
 		end
 	end
+	return false
 end
 
 def ldap_add(dn, attrs_hash)
 	begin
 		@ldap.add(:dn => dn, :attributes => attrs_hash)
-		puts "plop"
 	rescue
 		puts "Error: An error occured during LDAP entry creation\ndn: #{dn} \nattributes: \n#{attrs_hash}"
+		exit 1
+	end
+end
+
+def validate(args)
+	args.each do |key, value|
+		next if key.match(/#{value}/)
+		puts "Error: '#{key}' is invalid"
+		exit 1
+	end
+end
+
+def validate_uniqueness(args)
+	args.each do |key, value|
+		next unless ldap_search(LDAPDOMAIN, key.to_s + "=" + value)
+		puts "Error: the #{key} '#{value}' is already used"
 		exit 1
 	end
 end
@@ -62,18 +79,19 @@ end
 
 ### YunoHost specific functions ###
 def user_add(attrs_hash)
-	# is_valid(
-	# 	attrs_hash["username"]	=> /^[a-z0-9_]$/
-	# 	attrs_hash["mail"]	=> /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,6}$/
-	# )
 
-	# is_unique(
-	# 	:uid		=> attrs_hash["username"],
-	# 	:cn 		=> attrs_hash["firstname"] + " " + attrs_hash["lastname"],
-	# 	:mail 		=> attrs_hash["mail"],
-	# 	:mailalias 	=> attrs_hash["mail"],
-	# 	:mailforward	=> attrs_hash["mail"],
-	# )
+	validate({
+		attrs_hash["username"]	=> /^[a-z0-9_]+$/,
+		attrs_hash["mail"]	=> /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,6}$/
+	})
+
+	validate_uniqueness({
+		:uid		=> attrs_hash["username"],
+		:cn 		=> attrs_hash["firstname"] + " " + attrs_hash["lastname"],
+		:mail 		=> attrs_hash["mail"],
+		:mailalias 	=> attrs_hash["mail"],
+		# :mailforward	=> attrs_hash["mail"],
+	})
 
 	dn = "cn=" + attrs_hash["firstname"] + " " + attrs_hash["lastname"] + ",ou=users," + LDAPDOMAIN
 
@@ -88,8 +106,12 @@ def user_add(attrs_hash)
 		:mail 		=> attrs_hash["mail"]
 	}
 
-	puts "yayaya"
-	ldap_add(dn, attrs)
+	begin
+		ldap_add(dn, attrs)
+	rescue
+		puts "Error: An error occured during user creation"
+		exit 1
+	end
 end
 
 ### Arguments parsing ###
@@ -99,7 +121,7 @@ when "user"
 	when "search"
 		if ARGV[2]
 			attributes = ARGV[3] ? ARGV[3].split(",") : "dn"
-			ldap_search("ou=users," + LDAPDOMAIN, ARGV[2], attributes)
+			ldap_search("ou=users," + LDAPDOMAIN, ARGV[2], attributes, true)
 		else
 			puts "Usage: yunh user search <ldap_filter> <attributes>\nExample: yunh user search \"cn=Homer Simpson\" uid,mail"
 			exit 1
@@ -110,7 +132,7 @@ when "user"
 			ARGV[2].split(",").each do |field|
 				attrs[field.split("=").first.to_s] = field.split("=").last.to_s
 			end
-			if attrs["firstname"] && attrs["firstname"] && attrs["username"] && attrs["mail"] && attrs["password"]
+			if attrs["firstname"] and attrs["firstname"] and attrs["username"] and attrs["mail"] and attrs["password"]
 				user_add attrs
 			else
 				puts "Error: Missing field(s)"
@@ -128,3 +150,5 @@ else
 	puts "Error: Need help? Type 'man yunohost'"
 	exit 1
 end
+
+exit 0
