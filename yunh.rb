@@ -26,6 +26,12 @@ require 'highline/import'	# Password Prompt
 ########### LDAP Connection ###########
 #######################################
 
+ERROR = "  \033[31mError:\033[00m "
+NOTICE = "  \033[34mNotice:\033[00m "
+SUCCESS = "  \033[32mSuccess:\033[00m "
+USAGE = "  \033[35mUsage:\033[00m "
+EXAMPLE = "  \033[33mExample:\033[00m "
+
 LDAPDOMAIN = `slapcat -f /etc/ldap/slapd.conf | cut -d" " -f2 | grep ^dc -m1`
 # LDAPDOMAIN = "dc=yunohost,dc=org"
 LDAPPWD = ask("Enter LDAP admin password:  ") { |q| q.echo = false }
@@ -34,9 +40,10 @@ LDAPPWD = ask("Enter LDAP admin password:  ") { |q| q.echo = false }
 @ldap.auth "cn=admin," + LDAPDOMAIN, LDAPPWD
 
 unless @ldap.bind
-	puts "\033[31mError:\033[00m " + @ldap.get_operation_result.message
+	puts ERROR + "" + @ldap.get_operation_result.message
 	exit @ldap.get_operation_result.code
 end
+
 
 
 #######################################
@@ -47,7 +54,7 @@ def ldap_search(base, filter, attrs = "dn", display = false)
 	begin
 		search = @ldap.search(:base => base, :attributes => attrs, :filter => filter, :return_result => true)
 	rescue
-		puts "\033[31mError:\033[00m Wrong search arguments \nfilter: #{filter} \nattributes: #{attrs}"
+		puts ERROR + "Wrong search arguments \nfilter: #{filter} \nattributes: #{attrs}"
 		exit 1
 	end
 	result = []
@@ -60,7 +67,7 @@ def ldap_search(base, filter, attrs = "dn", display = false)
 				puts row if display 
 				result[i][attr] = row[1] ? row : row.to_s
 			rescue
-				puts "\033[34mNotice:\033[00m Undefined attribute '#{attr}' for #{entry.dn}"				
+				puts NOTICE + "Undefined attribute '#{attr}' for #{entry.dn}"				
 			end
 		end
 		i += 1
@@ -73,17 +80,16 @@ def ldap_add(dn, attrs_hash)
 		@ldap.add(:dn => dn, :attributes => attrs_hash)
 		return true
 	rescue
-		puts "\033[31mError:\033[00m An error occured during LDAP entry creation\ndn: #{dn} \nattributes: \n#{attrs_hash}"
+		puts ERROR + "An error occured during LDAP entry creation\ndn: #{dn} \nattributes: \n#{attrs_hash}"
 		exit 1
 	end
 end
 
 def ldap_delete(dn)
 	begin
-		@ldap.delete(:dn => dn)
-		return true
+		return true if @ldap.delete(:dn => dn)
 	rescue
-		puts "\033[31mError:\033[00m An error occured during LDAP entry deletion\ndn: #{dn}"
+		puts ERROR + "An error occured during LDAP entry deletion\ndn: #{dn}"
 		exit 1
 	end
 end
@@ -91,7 +97,7 @@ end
 def validate(args)
 	args.each do |key, value|
 		next if key.match(/#{value}/)
-		puts "\033[31mError:\033[00m '#{key}' is invalid"
+		puts ERROR + "'#{key}' is invalid"
 		exit 1
 	end
 end
@@ -99,7 +105,7 @@ end
 def validate_uniqueness(args)
 	args.each do |key, value|
 		next unless ldap_search(LDAPDOMAIN, key.to_s + "=" + value)
-		puts "\033[31mError:\033[00m the #{key} '#{value}' is already used"
+		puts ERROR + "the #{key} '#{value}' is already used"
 		exit 1
 	end
 end
@@ -138,9 +144,9 @@ def user_add(attrs_hash)
 	}
 
 	if ldap_add(dn, attrs)
-		win_msg = "\033[32mUser successfully created !"
+		win_msg = SUCCESS + "User successfully created !\n"
 		attrs_hash.each do |key, value|
-			win_msg << "\n\033[35m  " << key.to_s << ": \033[00m" << value.to_s
+			win_msg << "\n\033[35m  " << key.dup.to_s.capitalize! << ": \033[00m" << value.to_s
 		end
 		puts win_msg
 	end
@@ -151,7 +157,7 @@ def user_populate(uid)
 	if user = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, user_attrs)
 		return user
 	else
-		puts "\033[31mError:\033[00m User '#{uid}' doesn't exists"
+		puts ERROR + "User '#{uid}' doesn't exists"
 		exit 1
 	end
 end
@@ -170,29 +176,29 @@ def user_info(uid)
 		puts "\033[35m  Mail aliases: \033[00m" << user["mailalias"]
 		return user
 	else
-		puts "\033[31mError:\033[00m User '#{uid}' doesn't exists"
+		puts ERROR + "User '#{uid}' doesn't exists"
 		exit 1
 	end
 end
 
 def user_delete(uids)
 	uids.each do |uid|
-		if dn = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, "dn")
-			puts "\033[32mUser '#{uid}' successfully deleted !\033[00m" if ldap_delete(dn)
+		if result = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, "dn")
+			puts SUCCESS + "User '#{uid}' successfully deleted !" if ldap_delete(result[0]["dn"])
 		else
-			puts "\033[31mError:\033[00m User '#{uid}' doesn't exists"
+			puts ERROR + "User '#{uid}' doesn't exists"
 			exit 1
 		end
 	end
 end
 
 def user_filter_delete(filter)
-	if dn_array = ldap_search("ou=users," + LDAPDOMAIN, filter, "dn")
-		dn_array.each do |dn|
-			puts "\033[32mUser '#{dn}' successfully deleted !\033[00m" if ldap_delete(dn)
+	if result_array = ldap_search("ou=users," + LDAPDOMAIN, filter.to_s, "dn")
+		result_array.each do |result|
+			puts SUCCESS + "'#{result["dn"]}' successfully deleted !" if ldap_delete(result["dn"])
 		end
 	else
-		puts "\033[31mError:\033[00m No user found"
+		puts ERROR + "No user found"
 		exit 1
 	end
 end
@@ -210,7 +216,8 @@ when "user"
 			attributes = ARGV[3] ? ARGV[3].split(",") : "dn"
 			ldap_search("ou=users," + LDAPDOMAIN, ARGV[2], attributes, true)
 		else
-			puts "\033[35mUsage:\033[00m yunh user search <ldap_filter> <attributes>\n\033[33mExample:\033[00m yunh user search \"cn=Homer Simpson\" uid,mail"
+			puts USAGE + "yunh user search <ldap_filter> <attributes>"
+			puts EXAMPLE + "yunh user search \"cn=Homer Simpson\" uid,mail"
 			exit 1
 		end
 	when "add"
@@ -222,18 +229,20 @@ when "user"
 			if attrs["firstname"] and attrs["firstname"] and attrs["username"] and attrs["mail"] and attrs["password"]
 				user_add attrs
 			else
-				puts "\033[31mError:\033[00m Missing field(s)"
+				puts ERROR + "Missing field(s)"
 				exit 1
 			end
 		else
-			puts "\033[35mUsage:\033[00m yunh user add <fields>\n\033[33mExample:\033[00m yunh user add \"firstname=Homer,lastname=Simpson,username=homer,mail=homer@simpson.org,password=donuts\""
+			puts USAGE + "yunh user add <username,firstname,lastname,mail,password>"
+			puts EXAMPLE + "yunh user add \"firstname=Homer,lastname=Simpson,username=homer,mail=homer@simpson.org,password=donuts\""
 			exit 1
 		end
 	when "info"
 		if ARGV[2]
 			user_info(ARGV[2])
 		else
-			puts "\033[35mUsage:\033[00m yunh user info <uid>\n\033[33mExample:\033[00m yunh user info homer"
+			puts USAGE + "yunh user info <uid>"
+			puts EXAMPLE + "yunh user info homer"
 			exit 1
 		end
 	when "delete"
@@ -242,22 +251,24 @@ when "user"
 			ARGV.delete_at(0)
 			user_delete(ARGV)
 		else
-			puts "\033[35mUsage:\033[00m yunh user delete <uid>\n\033[33mExample:\033[00m yunh user delete homer lisa marge"
+			puts USAGE + "yunh user delete <uid>"
+			puts EXAMPLE + "yunh user delete homer lisa marge"
 			exit 1
 		end
 	when "filter-delete"
 		if ARGV[2]
 			user_filter_delete(ARGV[2])
 		else
-			puts "\033[35mUsage:\033[00m yunh user filter-delete <filter>\n\033[33mExample:\033[00m yunh user filter-delete (objectClass=inetOrgPerson)"
+			puts USAGE + "yunh user filter-delete <filter>"
+			puts EXAMPLE + "yunh user filter-delete (objectClass=inetOrgPerson)"
 			exit 1
 		end
 	else
-		puts "\033[35mUsage:\033[00m yunh user search | add | delete | filter-delete"
+		puts USAGE + "yunh user search | add | delete | filter-delete"
 		exit 1
 	end
 else
-	puts "\033[31mError:\033[00m Need help? Type 'man yunohost'"
+	puts ERROR + "Need help? Type 'man yunohost'"
 	exit 1
 end
 
