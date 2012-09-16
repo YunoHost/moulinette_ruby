@@ -13,12 +13,19 @@ require 'digest/md5'
 require 'base64'
 require 'pp' # Just pretty printer :)
 
-### Gem dependencies ###
+
+#######################################
+########### Gem dependencies ##########
+#######################################
+
 require 'net/ldap'		# LDAP OM
 require 'highline/import'	# Password Prompt
 
 
-### LDAP Connection ###
+#######################################
+########### LDAP Connection ###########
+#######################################
+
 LDAPDOMAIN = `slapcat -f /etc/ldap/slapd.conf | cut -d" " -f2 | grep ^dc -m1`
 # LDAPDOMAIN = "dc=yunohost,dc=org"
 LDAPPWD = ask("Enter LDAP admin password:  ") { |q| q.echo = false }
@@ -31,7 +38,11 @@ unless @ldap.bind
 	exit @ldap.get_operation_result.code
 end
 
-### Generic LDAP functions ###
+
+#######################################
+######## Generic LDAP functions #######
+#######################################
+
 def ldap_search(base, filter, attrs = "dn", display = false)
 	begin
 		search = @ldap.search(:base => base, :attributes => attrs, :filter => filter, :return_result => true)
@@ -94,7 +105,10 @@ def validate_uniqueness(args)
 end
 
 
-### YunoHost specific functions ###
+#######################################
+##### YunoHost specific functions #####
+#######################################
+
 def user_add(attrs_hash)
 
 	validate({
@@ -183,7 +197,11 @@ def user_filter_delete(filter)
 	end
 end
 
-### Arguments parsing ###
+
+#######################################
+########## Arguments parsing ##########
+#######################################
+
 case ARGV[0]
 when "user"
 	case ARGV[1]
