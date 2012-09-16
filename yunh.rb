@@ -167,7 +167,11 @@ def user_info(uid)
 	if user = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, info_attrs)
 		user = user[0]
 		user["mail"] = user["mail"].join(", ") if user["mail"].kind_of?(Array)
-		user["mailalias"] = user["mailalias"].join(", ") if user["mailalias"].kind_of?(Array)
+		if user["mailalias"]
+			user["mailalias"] = user["mailalias"].join(", ") if user["mailalias"].kind_of?(Array)
+		else
+			user["mailalias"] = "none"
+		end
 
 		puts "\033[35m  Username: \033[00m" << user["uid"]
 		puts "\033[35m  Firstname: \033[00m" << user["givenName"]
