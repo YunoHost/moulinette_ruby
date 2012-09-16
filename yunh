@@ -1,0 +1,140 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+# Remember list
+# Environment variable : env['PATH_INFO'] 
+# Arguments passed : ARGV
+# Executed code : `ls -l`
+# Include path : $LOAD_PATH << './lib'
+# Relative path : require './ldap'
+
+require 'rubygems'
+require 'digest/md5'
+require 'base64'
+
+### Gem dependencies ###
+require 'net/ldap' 			# LDAP OM
+require 'highline/import' 	# Password Prompt
+
+
+### LDAP Connection ###
+LDAPDOMAIN = `slapcat -f /etc/ldap/slapd.conf | cut -d" " -f2 | grep ^dc -m1`
+# LDAPDOMAIN = "dc=yunohost,dc=org"
+LDAPPWD = ask("Enter LDAP admin password:  ") { |q| q.echo = false }
+
+@ldap = Net::LDAP.new(:host => "localhost", :port => "389")
+@ldap.auth "cn=admin," + LDAPDOMAIN, LDAPPWD
+
+unless @ldap.bind
+  puts "Error: " + @ldap.get_operation_result.message
+  exit @ldap.get_operation_result.code
+end
+
+### Generic LDAP functions ###
+def ldap_search(base, filter, attrs = "dn")
+  begin
+  	search = @ldap.search(:base => base, :attributes => attrs, :filter => filter, :return_result => true)
+  rescue
+  	puts "Error: Wrong search arguments \nfilter: #{filter} \nattributes: #{attrs}"
+   	exit 1
+  end
+  search.each do |entry|
+    attrs.each do |attr|
+	  begin
+	  	puts entry.send(attr.to_s)
+	  rescue
+	  	puts "Notice: Undefined attribute '#{attr}' for #{entry.dn}"    		
+	  end
+    end
+  end
+
+end
+
+case ARGV[0]
+when "user"
+	case ARGV[1]
+	when "search"
+		if ARGV[2]
+			attributes = ARGV[3] ? ARGV[3].split(",") : "dn"
+			ldap_search("ou=users," + LDAPDOMAIN, ARGV[2], attributes)
+		else
+			puts "Usage: yunh user search <ldap_filter> <attributes>\nExample: yunh user search \"cn=Homer Simpson\" uid,mail"
+			exit 1
+		end
+	else
+		puts "Usage: yunh user search | add"
+		exit 1
+	end
+else
+	puts "Error: Need help? Type 'man yunohost'"
+	exit 1
+end
+			
+
+
+# Création
+
+# newuser = User.new
+# newuser.cn = "Yyayaya"
+# newuser.uid = "plop"
+# newuser.save
+
+# Retrieve
+
+# user = User::Get.filter(eq)
+# user.get(filter)
+
+# Delete 
+
+# user = User.new
+# user.get(filter)
+
+# def get_args
+
+#   category = ARGV[0] if ARGV[0]
+#   action = ARGV[1] if ARGV[1]
+#   return {'category' => category, 'action' => action }
+
+# end
+
+# dn: cn=Elie Gavoty,ou=users,dc=gavoty,dc=net
+# structuralObjectClass: inetOrgPerson
+# entryUUID: 1561406e-8c7c-1031-89b5-19ae642bfa48
+# creatorsName: cn=admin,dc=gavoty,dc=net
+# createTimestamp: 20120906143709Z
+# objectClass: inetOrgPerson
+# objectClass: mailAccount
+# givenName: Elie
+# sn: Gavoty
+# displayName: Elie Gavoty
+# cn: Elie Gavoty
+# uid: elie
+# userPassword:: e01ENX1PS2o3OHhjRDIzbm45OWV2M25LTTVRPT0=
+# mail: elie@gavoty.net
+# MAILALIAS: monalias2@mail.fr
+
+# dn = "cn=Monsieur2 Gavoty,ou=users,dc=gavoty,dc=net"
+# attr = {
+#   :objectclass => ["mailAccount", "inetorgperson"],
+#   :givenName => "Monsieur2",
+#   :sn => "Gavoty",
+#   :displayName => "Monsieur2 Gavoty",
+#   :cn => "Monsieur2 Gavoty",
+#   :uid => "monsieur2",
+#   :userPassword => "{MD5}" + Base64.encode64(Digest::MD5.digest("yayaya")).chomp,
+#   :mail => "monsieur2@gavoty.net"
+# }
+# ldap.add(:dn => dn, :attributes => attr)
+
+# ldap_search
+
+# args = get_args
+# puts args['category']
+
+
+
+#ARGV.each do |value|
+#  puts value
+#  ldap_search
+#  puts `ls .`
+#end 
