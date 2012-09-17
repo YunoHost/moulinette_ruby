@@ -70,7 +70,10 @@ def user_add(attrs_hash)
 end
 
 def user_populate(uid)
-	user_attrs = ["dn", "cn", "uid", "userPassword", "objectClass", "mail", "givenName", "sn", "displayName", "mailalias"]
+	user_attrs = ["dn", "cn", "uid", "userPassword", 
+		      "objectClass", "mail", "givenName", 
+		      "sn", "displayName", "mailalias"]
+
 	if user = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, user_attrs)
 		return user
 	else

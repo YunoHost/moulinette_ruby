@@ -6,7 +6,6 @@
 
 require 'rubygems'
 require 'net/ldap'		# LDAP OM
-require 'highline/import'	# Password Prompt
 
 
 #######################################
@@ -15,7 +14,6 @@ require 'highline/import'	# Password Prompt
 
 LDAPDOMAIN = `slapcat -f /etc/ldap/slapd.conf | cut -d" " -f2 | grep ^dc -m1`
 # LDAPDOMAIN = "dc=yunohost,dc=org"
-LDAPPWD = ask("Enter LDAP admin password:  ") { |q| q.echo = false }
 # LDAPPWD = `cat /etc/yunohost/moulinette`
 
 @ldap = Net::LDAP.new(:host => "localhost", :port => "389")

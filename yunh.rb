@@ -10,6 +10,12 @@
 
 require 'rubygems'
 require 'pp' # debug
+
+#######################################
+require 'highline/import'	# Temporary passwor prompt
+LDAPPWD = ask("Enter LDAP admin password:  ") { |q| q.echo = false }
+#######################################
+
 require 'yunohost/functions'
 
 #######################################
