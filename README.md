@@ -4,8 +4,8 @@ YunoHost CLI
 ## This is only a draft
 
 
-User
-----
+### User
+
 yunohost user list --fields=fields,.. --filter=filter --limit=limit --offset=offset
 yunohost user add [fields=values...]
 yunohost user delete [users...]
@@ -13,8 +13,8 @@ yunohost user update [user] --changepassword [oldpwd] [newpwd] | --mailforward [
 yunohost user info [user]
 
 
-Domain
-------
+### Domain
+
 yunohost domain list --filter=filter --limit=limit --offset=offset
 yunohost domain add [domain]
 yunohost domain delete [domains...]
@@ -22,8 +22,8 @@ yunohost domain info [domain]
 yunohost domain renewcert [domain]
 
 
-App 
----
+### App 
+
 yunohost app list --fields=fields,.. --filter=filter --limit=limit --offset=offset
 yunohost app install [apps...]
 yunohost app remove [apps...]
@@ -33,28 +33,28 @@ yunohost app addaccess [apps...] --everyone | --users=users,..
 yunohost app removeaccess [apps...] --everyone | --users=users,..
 
 
-Repo
-----
+### Repo
+
 yunohost repo list  --filter=filter --limit=limit --offset=offset
 yunohost repo add [url] --name=name
 yunohost repo remove [name/url]
 yunohost repo update
 
 
-Firewall
---------
+### Firewall
+
 yunohost firewall list
 yunohost firewall allow [port] [TCP/UDP/Both] [name]
 yunohost firewall disallow [name]
 
 
-Monitoring
-----------
+### Monitoring
+
 yunohost monitor
 
 
-Other
------
+### Other
+
 yunohost paste
 yunohost support
 
@@ -69,8 +69,8 @@ Prefix: https://mydomain.org:6767
     METHOD  {params}
 
 
-User
-----
+### User
+
 /user/list
     GET     {fields, filter, limit, offset}
 
@@ -92,8 +92,8 @@ User
     DELETE  {mails}
 
 
-Domain
-------
+### Domain
+
 /domain/list
     GET     {filter, limit, offset}
 
@@ -106,7 +106,7 @@ Domain
     PUT     {domain}
 
 
-App
+### App
 ---
 /app/
 
@@ -115,8 +115,8 @@ App
 YunoHost Web Views
 ==================
 
-User
-----
+### User
+
 /user/list
 /user/add
 /user/show/<user>
