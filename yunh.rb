@@ -9,107 +9,87 @@
 # Relative path : require './ldap'
 
 require 'rubygems'
-require 'pp' 				# Just pretty printer :)
+require 'pp' # debug
 require 'yunohost/functions'
 
 #######################################
 ########## Arguments parsing ##########
 #######################################
 
+arguments = {
+	:user 		=> ["add", "search", "info", "delete", "filterdelete"] 
+	# :domain	=> []
+	# :apps		=> []
+}
 
-def parse_user_info(args)
-	if args[0]
-		user_info(args[0])
-	else
-		puts USAGE + "yunh user info <uid>"
-		puts EXAMPLE + "yunh user info homer"
-		exit ERROR_ARGUMENTS
+usages = {
+	:user_add 		=> "yunh user add <username,firstname,lastname,mail,password>",
+	:user_search 		=> "yunh user search <ldap_filter> <attributes>",
+	:user_info 		=> "yunh user info <uid>",
+	:user_delete 		=> "yunh user delete <uids>",
+	:user_filterdelete 	=> "yunh user filter-delete <filter>"
+}
+
+examples = {
+	:user_add 		=> "yunh user add \"firstname=Homer,lastname=Simpson,username=homer,mail=homer@simpson.org,password=donuts\"",
+	:user_search 		=> "yunh user search \"cn=Homer Simpson\" uid,mail",
+	:user_info 		=> "yunh user info homer",
+	:user_delete 		=> "yunh user delete homer lisa marge",
+	:user_filterdelete 	=> "yunh user filter-delete (objectClass=inetOrgPerson)"
+}
+
+def parse_user_add(args)
+	unless args.first.match(/^--/)
+		attrs = {}
+		args.first.split(",").each do |field|
+			attrs[field.split("=").first.to_s] = field.split("=").last.to_s
+		end
+		if attrs["firstname"] and 
+		   attrs["firstname"] and 
+	           attrs["username"] and 
+	           attrs["mail"] and 
+		   attrs["password"] then
+			user_add attrs
+		else
+			puts ERROR + "Missing field(s)"
+			exit ERROR_ARGUMENTS
+		end
 	end
 end
 
-arguments = {
-	:user 		=> ["add", "search", "info", "delete", "filter-delete"] 
-	# :domain	=> []
-	# :apps 		=> []
-}
+def parse_user_search(args)
+	attributes = args.last ? args.last.split(",") : "dn"
+	ldap_search("ou=users," + LDAPDOMAIN, args.first, attributes, true)
+end
 
-ARGV[0].each.to_s
+def parse_user_info(args)
+	user_info(args.first)
+end
 
-puts arguments[ARGV[0].to_sym]
+def parse_user_delete(args)
+	user_delete(args)
+end
+
+def parse_user_filterdelete(args)
+	user_filter_delete(args.first)
+end
+
 
 unless ARGV[0] and ARGV[1] and arguments[ARGV[0].to_sym] and arguments[ARGV[0].to_sym].include?(ARGV[1])
 	puts ERROR + "Need help? Type 'man yunohost'"
 	exit ERROR_ARGUMENTS
 else
-	method_name = "parse_" + ARGV[0] + "_" + ARGV[1]
+	key_name 	= ARGV[0] + "_" + ARGV[1]
+	method_name = "parse_" + key_name
 	ARGV.delete_at(0)
 	ARGV.delete_at(0)
-	self.send(method_name.to_sym, ARGV)
-end
-
-
-case ARGV[0]
-when "user"
-	case ARGV[1]
-	when "search"
-		if ARGV[2]
-			attributes = ARGV[3] ? ARGV[3].split(",") : "dn"
-			ldap_search("ou=users," + LDAPDOMAIN, ARGV[2], attributes, true)
-		else
-			puts USAGE + "yunh user search <ldap_filter> <attributes>"
-			puts EXAMPLE + "yunh user search \"cn=Homer Simpson\" uid,mail"
-			exit ERROR_ARGUMENTS
-		end
-	when "add"
-		if ARGV[2] && !ARGV[2].match(/^--/)
-			attrs = {}
-			ARGV[2].split(",").each do |field|
-				attrs[field.split("=").first.to_s] = field.split("=").last.to_s
-			end
-			if attrs["firstname"] and attrs["firstname"] and attrs["username"] and attrs["mail"] and attrs["password"]
-				user_add attrs
-			else
-				puts ERROR + "Missing field(s)"
-				exit ERROR_ARGUMENTS
-			end
-		else
-			puts USAGE + "yunh user add <username,firstname,lastname,mail,password>"
-			puts EXAMPLE + "yunh user add \"firstname=Homer,lastname=Simpson,username=homer,mail=homer@simpson.org,password=donuts\""
-			exit ERROR_ARGUMENTS
-		end
-	when "info"
-		if ARGV[2]
-			user_info(ARGV[2])
-		else
-			puts USAGE + "yunh user info <uid>"
-			puts EXAMPLE + "yunh user info homer"
-			exit ERROR_ARGUMENTS
-		end
-	when "delete"
-		if ARGV[2]
-			ARGV.delete_at(0)
-			ARGV.delete_at(0)
-			user_delete(ARGV)
-		else
-			puts USAGE + "yunh user delete <uid>"
-			puts EXAMPLE + "yunh user delete homer lisa marge"
-			exit ERROR_ARGUMENTS
-		end
-	when "filter-delete"
-		if ARGV[2]
-			user_filter_delete(ARGV[2])
-		else
-			puts USAGE + "yunh user filter-delete <filter>"
-			puts EXAMPLE + "yunh user filter-delete (objectClass=inetOrgPerson)"
-			exit ERROR_ARGUMENTS
-		end
+	unless ARGV.empty?
+		self.send(method_name.to_sym, ARGV) # Call dynamic methods above
 	else
-		puts USAGE + "yunh user search | add | delete | filter-delete"
+		puts USAGE   + usages[key_name.to_sym]
+		puts EXAMPLE + examples[key_name.to_sym]
 		exit ERROR_ARGUMENTS
 	end
-else
-	puts ERROR + "Need help? Type 'man yunohost'"
-	exit ERROR_ARGUMENTS
 end
 
 exit 0

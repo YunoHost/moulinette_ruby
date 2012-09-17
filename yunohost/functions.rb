@@ -8,10 +8,10 @@ require 'base64'
 ############## Messages ###############
 #######################################
 
-ERROR = "  \033[31m\033[1mError:\033[m "
-NOTICE = "  \033[34m\033[1mNotice:\033[m "
+ERROR 	= "  \033[31m\033[1mError:\033[m "
+NOTICE 	= "  \033[34m\033[1mNotice:\033[m "
 SUCCESS = "  \033[32m\033[1mSuccess:\033[m "
-USAGE = "  \033[35m\033[1mUsage:\033[m "
+USAGE 	= "  \033[35m\033[1mUsage:\033[m "
 EXAMPLE = "  \033[33m\033[1mExample:\033[m "
 
 
@@ -19,10 +19,10 @@ EXAMPLE = "  \033[33m\033[1mExample:\033[m "
 ############# Error codes #############
 #######################################
 
-ERROR_LDAP = 50
+ERROR_LDAP 	= 50
 ERROR_ARGUMENTS = 60
-ERROR_INVALID = 70
-ERROR_EXISTS = 80
+ERROR_INVALID 	= 70
+ERROR_EXISTS 	= 80
 ERROR_NOT_FOUND = 90
 
 
