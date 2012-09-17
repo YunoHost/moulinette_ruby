@@ -1,7 +1,9 @@
-YunoHost CLI
-============
+Under redaction
+===============
 
-__Under redaction__
+
+YunoHost CLI
+------------
 
 ### User
 
@@ -60,8 +62,8 @@ __Under redaction__
     
     
 YunoHost REST API
-=================
-    
+-----------------
+
 Prefix: https://mydomain.org:6767
     
     /route
@@ -112,7 +114,7 @@ Prefix: https://mydomain.org:6767
     
     
 YunoHost Web Views
-==================
+------------------
 
 ### User
     
