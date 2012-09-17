@@ -1,8 +1,7 @@
 YunoHost CLI
 ============
 
-## This is only a draft
-
+__Under redaction__
 
 ### User
 
