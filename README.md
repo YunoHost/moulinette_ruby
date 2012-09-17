@@ -1,32 +1,29 @@
-moulinette
-==========
+YunoHost CLI
+============
 
-*This is only a draft*
+## This is only a draft
 
-********************
-*** YunoHost CLI ***
-********************
 
-Note: yunohost alias yunh
-
-__________
-__ User __
+User
+----
 yunohost user list --fields=fields,.. --filter=filter --limit=limit --offset=offset
 yunohost user add [fields=values...]
 yunohost user delete [users...]
 yunohost user update [user] --changepassword [oldpwd] [newpwd] | --mailforward [add/remove] [mails...]  | --mailalias [add/remove] [mails...] | [fields=values...]
 yunohost user info [user]
 
-____________
-__ Domain __
+
+Domain
+------
 yunohost domain list --filter=filter --limit=limit --offset=offset
 yunohost domain add [domain]
 yunohost domain delete [domains...]
 yunohost domain info [domain]
 yunohost domain renewcert [domain]
 
-_________
-__ App __
+
+App 
+---
 yunohost app list --fields=fields,.. --filter=filter --limit=limit --offset=offset
 yunohost app install [apps...]
 yunohost app remove [apps...]
@@ -35,40 +32,45 @@ yunohost app info [app]
 yunohost app addaccess [apps...] --everyone | --users=users,..
 yunohost app removeaccess [apps...] --everyone | --users=users,..
 
-__________
-__ Repo __
+
+Repo
+----
 yunohost repo list  --filter=filter --limit=limit --offset=offset
 yunohost repo add [url] --name=name
 yunohost repo remove [name/url]
 yunohost repo update
 
-______________
-__ Firewall __
+
+Firewall
+--------
 yunohost firewall list
 yunohost firewall allow [port] [TCP/UDP/Both] [name]
 yunohost firewall disallow [name]
 
-________________
-__ Monitoring __
+
+Monitoring
+----------
 yunohost monitor
 
-___________
-__ Other __
+
+Other
+-----
 yunohost paste
 yunohost support
 
 
-*************************
-*** YunoHost REST API ***
-*************************
+
+YunoHost REST API
+=================
 
 Prefix: https://mydomain.org:6767
 
 /route
     METHOD  {params}
 
-__________
-__ User __
+
+User
+----
 /user/list
     GET     {fields, filter, limit, offset}
 
@@ -89,8 +91,9 @@ __ User __
     POST    {mails}
     DELETE  {mails}
 
-____________
-__ Domain __
+
+Domain
+------
 /domain/list
     GET     {filter, limit, offset}
 
@@ -102,16 +105,18 @@ __ Domain __
 /domain/renewcert
     PUT     {domain}
 
-_________
-__ App __
+
+App
+---
 /app/
 
 
-**************************
-*** YunoHost Web Views ***
-**************************
 
-__ User __
+YunoHost Web Views
+==================
+
+User
+----
 /user/list
 /user/add
 /user/show/<user>
