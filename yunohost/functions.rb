@@ -25,8 +25,8 @@ ERROR_INVALID 	= 70
 ERROR_EXISTS 	= 80
 ERROR_NOT_FOUND = 90
 
-
 require 'yunohost/ldap'
+@@yunoldap = YunoHostLDAP.new
 
 #######################################
 ##### YunoHost specific functions #####
@@ -34,12 +34,12 @@ require 'yunohost/ldap'
 
 def user_add(attrs_hash)
 
-	validate({
+	@@yunoldap.validate({
 		attrs_hash["username"]	=> /^[a-z0-9_]+$/,
 		attrs_hash["mail"]	=> /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,6}$/
 	})
 
-	validate_uniqueness({
+	@@yunoldap.validate_uniqueness({
 		:uid		=> attrs_hash["username"],
 		:cn 		=> attrs_hash["firstname"] + " " + attrs_hash["lastname"],
 		:mail 		=> attrs_hash["mail"],
@@ -60,12 +60,13 @@ def user_add(attrs_hash)
 		:mail 		=> attrs_hash["mail"]
 	}
 
-	if ldap_add(dn, attrs)
+	if @@yunoldap.add(dn, attrs)
 		win_msg = SUCCESS + "User successfully created !\n"
 		attrs_hash.each do |key, value|
 			win_msg << "\n\033[35m\033[1m  " << key.dup.to_s.capitalize! << ": \033[m" << value.to_s
 		end
 		puts win_msg
+		return {:dn => dn, :attrs => attrs}
 	end
 end
 
@@ -74,7 +75,7 @@ def user_populate(uid)
 		      "objectClass", "mail", "givenName", 
 		      "sn", "displayName", "mailalias"]
 
-	if user = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, user_attrs)
+	if user = @@yunoldap.search("ou=users," + LDAPDOMAIN, "uid=" + uid, user_attrs)
 		return user
 	else
 		puts ERROR + "User '#{uid}' doesn't exists"
@@ -84,7 +85,7 @@ end
 
 def user_info(uid)
 	info_attrs = ["givenName", "sn", "mail", "mailalias", "uid"]
-	if user = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, info_attrs)
+	if user = @@yunoldap.search("ou=users," + LDAPDOMAIN, "uid=" + uid, info_attrs)
 		user = user[0]
 		user["mail"] = user["mail"].join(", ") if user["mail"].kind_of?(Array)
 		if user["mailalias"]
@@ -93,11 +94,11 @@ def user_info(uid)
 			user["mailalias"] = "none"
 		end
 
-		puts "\033[35m\033[1m  Username: \033[m" << user["uid"]
-		puts "\033[35m\033[1m  Firstname: \033[m" << user["givenName"]
-		puts "\033[35m\033[1m  Lastname: \033[m" << user["sn"]
-		puts "\033[35m\033[1m  Mail: \033[m" << user["mail"]
-		puts "\033[35m\033[1m  Mail aliases: \033[m" << user["mailalias"]
+		puts "\033[35m\033[1m  Username: \033[m" 	<< user["uid"]
+		puts "\033[35m\033[1m  Firstname: \033[m" 	<< user["givenName"]
+		puts "\033[35m\033[1m  Lastname: \033[m" 	<< user["sn"]
+		puts "\033[35m\033[1m  Mail: \033[m" 		<< user["mail"]
+		puts "\033[35m\033[1m  Mail aliases: \033[m" 	<< user["mailalias"]
 		return user
 	else
 		puts ERROR + "User '#{uid}' doesn't exists"
@@ -107,8 +108,9 @@ end
 
 def user_delete(uids)
 	uids.each do |uid|
-		if result = ldap_search("ou=users," + LDAPDOMAIN, "uid=" + uid, "dn")
-			puts SUCCESS + "User '#{uid}' successfully deleted !" if ldap_delete(result[0]["dn"])
+		if result = @@yunoldap.search("ou=users," + LDAPDOMAIN, "uid=" + uid, "dn")
+			puts SUCCESS + "User '#{uid}' successfully deleted !" if @@yunoldap.delete(result[0]["dn"])
+			return true
 		else
 			puts ERROR + "User '#{uid}' doesn't exists"
 			exit ERROR_NOT_FOUND
@@ -117,9 +119,9 @@ def user_delete(uids)
 end
 
 def user_filter_delete(filter)
-	if result_array = ldap_search("ou=users," + LDAPDOMAIN, filter.to_s, "dn")
+	if result_array = @@yunoldap.search("ou=users," + LDAPDOMAIN, filter.to_s, "dn")
 		result_array.each do |result|
-			puts SUCCESS + "'#{result["dn"]}' successfully deleted !" if ldap_delete(result["dn"])
+			puts SUCCESS + "'#{result["dn"]}' successfully deleted !" if @@yunoldap.delete(result["dn"])
 		end
 	else
 		puts ERROR + "No user found"

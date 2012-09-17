@@ -65,7 +65,7 @@ end
 
 def parse_user_search(args)
 	attributes = args.last ? args.last.split(",") : "dn"
-	ldap_search("ou=users," + LDAPDOMAIN, args.first, attributes, true)
+	@@yunldap.search("ou=users," + LDAPDOMAIN, args.first, attributes, true)
 end
 
 def parse_user_info(args)
