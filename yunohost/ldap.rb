@@ -1,11 +1,7 @@
 # encoding: UTF-8
 
 require 'rubygems'
-require 'net/ldap'		# LDAP OM
-
-LDAPDOMAIN = `slapcat -f /etc/ldap/slapd.conf | cut -d" " -f2 | grep ^dc -m1`
-# LDAPDOMAIN = "dc=yunohost,dc=org"
-# LDAPPWD = `cat /etc/yunohost/moulinette`
+require 'net/ldap'
 
 class YunoHostLDAP
 	attr_accessor :ldap

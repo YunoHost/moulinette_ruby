@@ -1,20 +1,8 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 
-# Remember list
-# Environment variable : env['PATH_INFO']
-# Arguments passed : ARGV
-# Executed code : `ls -l`
-# Include path : $LOAD_PATH << './lib'
-# Relative path : require './ldap'
-
-require 'rubygems'
-require 'pp' # debug
-
-#######################################
-require 'highline/import'	# Temporary passwor prompt
-LDAPPWD = ask("Enter LDAP admin password:  ") { |q| q.echo = false }
-#######################################
+# env['PATH_INFO']
+# $LOAD_PATH << './lib'
 
 require 'yunohost/functions'
 

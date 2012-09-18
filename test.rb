@@ -1,11 +1,8 @@
 # encoding: UTF-8
 
-require 'rubygems'  
+# $LOAD_PATH << './lib'
 require 'test/unit'
-require 'highline/import'	# Password prompt
-LDAPPWD = ask("Enter LDAP admin password:  ") { |q| q.echo = false }
 require 'yunohost/functions'
-require 'pp'
 
 @@user_hash = {
 	"username"  => "toto",
@@ -19,6 +16,7 @@ class TestYunoHostFunctions < Test::Unit::TestCase
 
 	def test_ldap_search
 
+    puts "\n\n====== ldap_search ======\n"
 		result = [{
 			"objectclass" 	=> ["mailAccount", "organizationalRole", "posixAccount", "simpleSecurityObject"],
 			"dn" 	      	=> "cn=admin," + LDAPDOMAIN.chomp
@@ -33,11 +31,11 @@ class TestYunoHostFunctions < Test::Unit::TestCase
 		  }]
 
 		assert_equal(result, @@yunoldap.search(LDAPDOMAIN, "(cn=admin)", ["dn", "objectclass"], false))
-
 	end
  
 	def test_user_add
 
+    puts "\n\n====== user_add ======\n"
 		result = {
 			:dn	=> "cn=Toto Tata Titi,ou=users," + LDAPDOMAIN,
 			:attrs 	=> {
@@ -54,11 +52,11 @@ class TestYunoHostFunctions < Test::Unit::TestCase
 		
 		user_delete("toto") if @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
 		assert_equal(result, user_add(@@user_hash))
-
 	end
 
 	def test_user_info
 
+    puts "\n\n====== user_info ======\n"
 		result = {
 			"givenName" => "Toto",
 			"mailalias" => "none",
@@ -69,11 +67,11 @@ class TestYunoHostFunctions < Test::Unit::TestCase
 
 		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
 		assert_equal(result, user_info("toto"))
-
 	end
  
 	def test_user_delete
 
+    puts "\n\n====== user_delete ======\n"
 		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
 		assert_equal(true, user_delete("toto"))
 	
@@ -81,13 +79,14 @@ class TestYunoHostFunctions < Test::Unit::TestCase
 
 	def test_user_filterdelete
 
+    puts "\n\n====== user_filterdelete ======\n"
 		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
 		assert_equal(true, user_filterdelete("(uid=toto)"))
-	
 	end
 
 	def test_user_populate
 
+    puts "\n\n====== user_populate ======\n"
 		result = [{
 			"cn"		=> "Toto Tata Titi",
 			"givenName"	=> "Toto",
@@ -102,7 +101,6 @@ class TestYunoHostFunctions < Test::Unit::TestCase
 
 		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
 		assert_equal(result, user_populate("toto"))
-	
 	end
   
 end
