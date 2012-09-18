@@ -118,10 +118,11 @@ def user_delete(uids)
 	end
 end
 
-def user_filter_delete(filter)
+def user_filterdelete(filter)
 	if result_array = @@yunoldap.search("ou=users," + LDAPDOMAIN, filter.to_s, "dn")
 		result_array.each do |result|
 			puts SUCCESS + "'#{result["dn"]}' successfully deleted !" if @@yunoldap.delete(result["dn"])
+			return true
 		end
 	else
 		puts ERROR + "No user found"

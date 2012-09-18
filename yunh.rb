@@ -77,7 +77,7 @@ def parse_user_delete(args)
 end
 
 def parse_user_filterdelete(args)
-	user_filter_delete(args.first)
+	user_filterdelete(args.first)
 end
 
 
