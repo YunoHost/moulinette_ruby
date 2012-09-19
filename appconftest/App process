@@ -14,6 +14,7 @@
 * * Installer les dépendances avec l'archi éventuelle
 * Si les sources ont bien été récupérées
 * * Déplacer les sources au bon endroit
+* * Créer le vhost ou le repertoire
 * * Configurer apache
 * Exécuter le script d'install
 * Inscrire name, description, site_url, icon, user_doc_url, dependencies, service_name, servic

@@ -26,7 +26,7 @@ YunoHost CLI
 ### App 
     
     yunohost app list --fields=fields,.. --filter=filter --limit=limit --offset=offset
-    yunohost app install [apps...]
+    yunohost app install [apps...] --domain=domain --path=path --label=label --public --protected
     yunohost app remove [apps...]
     yunohost app upgrade [apps...]
     yunohost app info [app]
