@@ -98,7 +98,7 @@ def user_delete(uids)
 	uids.each do |uid|
 		if result = @@yunoldap.search("ou=users," + LDAPDOMAIN, "uid=" + uid, "dn")
 			puts SUCCESS + "User '#{uid}' successfully deleted !" if @@yunoldap.delete(result[0]["dn"])
-			return true
+			return result[0]["dn"]
 		else
 			puts ERROR + "User '#{uid}' doesn't exists"
 			exit ERROR_NOT_FOUND
@@ -110,8 +110,25 @@ def user_filterdelete(filter)
 	if result_array = @@yunoldap.search("ou=users," + LDAPDOMAIN, filter.to_s, "dn")
 		result_array.each do |result|
 			puts SUCCESS + "'#{result["dn"]}' successfully deleted !" if @@yunoldap.delete(result["dn"])
-			return true
+			return result["dn"]
 		end
+	else
+		puts ERROR + "No user found"
+		exit ERROR_NOT_FOUND
+	end
+end
+
+def user_list(filter = "uid=*")
+	user_attrs = ["dn", "cn", "uid", "userPassword", 
+		      "objectClass", "mail", "givenName", 
+		      "sn", "displayName", "mailalias"]
+
+	if result_array = @@yunoldap.search("ou=users," + LDAPDOMAIN, filter, user_attrs)
+		result_array.each do |result|
+			puts "\n  ===== " + result["uid"] + " ====="
+			user_info(result["uid"])
+		end
+		return result_array
 	else
 		puts ERROR + "No user found"
 		exit ERROR_NOT_FOUND

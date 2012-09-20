@@ -49,7 +49,7 @@ class YunoHostLDAP
 					puts row if display 
 					result[i][attr] = row[1] ? row : row.to_s
 				rescue
-					puts NOTICE + "Undefined attribute '#{attr}' for #{entry.dn}"				
+					puts NOTICE + "Undefined attribute '#{attr}' for #{entry.dn}" if DEBUG			
 				end
 			end
 			i += 1

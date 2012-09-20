@@ -17,11 +17,6 @@ attributetype ( 1.3.6.1.4.1.40328.1.20.1.2
         SUBSTR caseIgnoreSubstringsMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
 
-attributetype ( 1.3.6.1.4.1.40328.1.20.1.3
-        NAME 'isInMenu'
-        DESC 'Show app menu'
-        SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 )
-
 attributetype ( 1.3.6.1.4.1.40328.1.20.1.4
         NAME 'accessMode'
         DESC 'Access Mode'
@@ -93,14 +88,9 @@ objectclass ( 1.3.6.1.4.1.40328.1.1.1.1
         SUP top
         AUXILIARY
         MUST (
-            appname $ appmenu $ apppublic $ apphost $ apppath $ appprotect $ isService $ isWebApp $ appversion
+            name $ vhost $ path $ isService $ isWebApp $ version $ accessMode
             )
         MAY (
-            appdesc $ appicon $ docUrl $ homepageUrl  
+            desc $ icon $ docUrl $ homepageUrl $ label
             )
         )
-
-
-authorized_users
-access_mode
-label

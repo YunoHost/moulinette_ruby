@@ -29,6 +29,15 @@ require 'yunohost/functions'
 	"password"  => "yayaya"
 }
  
+
+@@user2_hash = {
+	"username"  => "homer",
+	"mail"      => "homer@simpson.net",
+	"lastname"  => "Simpson",
+	"firstname" => "Homer",
+	"password"  => "yayaya"
+}
+
 class TestYunoHostFunctions < Test::Unit::TestCase
 
 	def test_ldap_search
@@ -89,16 +98,18 @@ class TestYunoHostFunctions < Test::Unit::TestCase
 	def test_user_delete
 
     	puts "\n\n====== user_delete ======\n"
+    	result = "cn=Toto Tata Titi,ou=users," + LDAPDOMAIN.chomp
 		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
-		assert_equal(true, user_delete("toto"))
+		assert_equal(result, user_delete("toto"))
 	
 	end
 
 	def test_user_filterdelete
 
     	puts "\n\n====== user_filterdelete ======\n"
+    	result = "cn=Toto Tata Titi,ou=users," + LDAPDOMAIN.chomp
 		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
-		assert_equal(true, user_filterdelete("(uid=toto)"))
+		assert_equal(result, user_filterdelete("(uid=toto)"))
 	end
 
 	def test_user_populate
@@ -118,6 +129,68 @@ class TestYunoHostFunctions < Test::Unit::TestCase
 
 		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
 		assert_equal(result, user_populate("toto"))
+	end
+
+	def test_user_populate
+
+    	puts "\n\n====== user_populate ======\n"
+		result = [{
+			"cn"		=> "Toto Tata Titi",
+			"givenName"	=> "Toto",
+			"displayName"	=> "Toto Tata Titi",
+			"sn"		=> "Tata Titi",
+			"mail"		=> "toto@tata.net",
+			"objectClass"	=> ["mailAccount", "inetOrgPerson"],
+			"uid"		=> "toto",
+			"userPassword"	=> "{MD5}odEjpjk2q77oeCPi8a/6mw==",
+			"dn"		=> "cn=Toto Tata Titi,ou=users,dc=gavoty,dc=net"
+		}]
+
+		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
+		assert_equal(result, user_populate("toto"))
+	end
+
+	def test_user_list
+
+    	puts "\n\n====== user_list ======\n"
+		result = [
+			{
+				"cn"		=> "Toto Tata Titi",
+				"givenName"	=> "Toto",
+				"displayName"	=> "Toto Tata Titi",
+				"sn"		=> "Tata Titi",
+				"mail"		=> "toto@tata.net",
+				"objectClass"	=> ["mailAccount", "inetOrgPerson"],
+				"uid"		=> "toto",
+				"userPassword"	=> "{MD5}odEjpjk2q77oeCPi8a/6mw==",
+				"dn"		=> "cn=Toto Tata Titi,ou=users,dc=gavoty,dc=net"
+			},
+			{
+				"cn"		=> "Homer Simpson",
+				"givenName"	=> "Homer",
+				"displayName"	=> "Homer Simpson",
+				"sn"		=> "Simpson",
+				"mail"		=> "homer@simpson.net",
+				"objectClass"	=> ["mailAccount", "inetOrgPerson"],
+				"uid"		=> "homer",
+				"userPassword"	=> "{MD5}odEjpjk2q77oeCPi8a/6mw==",
+				"dn"		=> "cn=Homer Simpson,ou=users,dc=gavoty,dc=net"
+			},
+
+		]
+
+		user_add(@@user_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
+		user_add(@@user2_hash) unless @@yunoldap.search(LDAPDOMAIN, "(uid=homer)")
+
+		assert_equal(result, user_list("(|(uid=homer) (uid=toto))"))
+
+		user_delete("toto")
+		user_delete("homer")
+	end
+
+	def clear
+		user_delete(@@user_hash) if @@yunoldap.search(LDAPDOMAIN, "(uid=toto)")
+		user_delete(@@user2_hash) if @@yunoldap.search(LDAPDOMAIN, "(uid=homer)")
 	end
   
 end
