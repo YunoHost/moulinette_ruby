@@ -25,7 +25,7 @@ attributetype ( 1.3.6.1.4.1.40328.1.20.1.4
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
 
 attributetype ( 1.3.6.1.4.1.40328.1.20.1.5
-        NAME 'appIcon'
+        NAME 'icon'
         DESC 'App JPEG image'
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.28 )
 
